@@ -4,10 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\IndexCampusEventRequest;
+use App\Http\Requests\StoreCampusEventRequest;
+use App\Http\Requests\UpdateCampusEventRequest;
 use App\Http\Resources\CampusEventResource;
 use App\Models\CampusEvent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 
 class CampusEventController extends Controller
 {
@@ -33,6 +39,22 @@ class CampusEventController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreCampusEventRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $validated['is_public'] = $request->boolean('is_public', true);
+
+        $event = $request->user()->campusEvents()->create(Arr::except($validated, ['topics']));
+        $event->topics()->sync($validated['topics'] ?? []);
+
+        return (new CampusEventResource(
+            $event->load(['user', 'venue', 'topics'])->loadCount('topics')
+        ))->response()->setStatusCode(201);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(CampusEvent $event): CampusEventResource
@@ -40,5 +62,33 @@ class CampusEventController extends Controller
         return new CampusEventResource(
             $event->load(['user', 'venue', 'topics'])->loadCount('topics')
         );
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateCampusEventRequest $request, CampusEvent $event): CampusEventResource
+    {
+        $validated = $request->validated();
+        $validated['is_public'] = $request->boolean('is_public', $event->is_public);
+
+        $event->update(Arr::except($validated, ['topics']));
+        $event->topics()->sync($validated['topics'] ?? []);
+
+        return new CampusEventResource(
+            $event->load(['user', 'venue', 'topics'])->loadCount('topics')
+        );
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(CampusEvent $event): Response
+    {
+        Gate::authorize('delete', $event);
+
+        $event->delete();
+
+        return response()->noContent();
     }
 }
