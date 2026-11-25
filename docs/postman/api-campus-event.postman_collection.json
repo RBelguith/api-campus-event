@@ -1,0 +1,359 @@
+{
+  "info": {
+    "_postman_id": "9f3c7a60-5b6d-4d2f-9a41-campus-event-api",
+    "name": "Campus Event API",
+    "description": "Collection de l'API REST du projet api-campus-event. La connexion enregistre le jeton dans la variable de collection {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slug",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "event_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Connexion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Connexion reussie', function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.response.to.have.property('json');",
+              "});",
+              "const body = pm.response.json();",
+              "pm.test('Un jeton Bearer est renvoye', function () {",
+              "    pm.expect(body.token).to.be.a('string').and.to.have.length.above(10);",
+              "    pm.expect(body.token_type).to.eql('Bearer');",
+              "});",
+              "pm.collectionVariables.set('token', body.token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "auth": {
+        "type": "noauth"
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"organisateur1@campus.test\",\n  \"password\": \"password\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Lister les evenements",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Liste paginee', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data).to.be.an('array');",
+              "    pm.expect(body.links).to.exist;",
+              "    pm.expect(body.meta).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/campus-events?per_page=5",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events"],
+          "query": [{ "key": "per_page", "value": "5" }]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtrer par lieu",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Filtre par slug de lieu', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.json().data.forEach(function (event) {",
+              "        pm.expect(event.venue.slug).to.eql('amphi-a');",
+              "    });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/campus-events?venue=amphi-a",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events"],
+          "query": [{ "key": "venue", "value": "amphi-a" }]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Voir un evenement",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Evenement trouve', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().data).to.have.property('organizer');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/campus-events/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events", "1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Lister les lieux",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Lieux avec compteur', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().data[0]).to.have.property('campus_events_count');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/venues",
+          "host": ["{{base_url}}"],
+          "path": ["api", "venues"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Voir un lieu",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/venues/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "venues", "1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Creer un evenement",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('slug', 'evenement-postman-' + Date.now());"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Creation 201 avec themes', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data.topics).to.have.lengthOf(2);",
+              "    pm.expect(data.organizer.name).to.eql('Claire Fontaine');",
+              "    pm.collectionVariables.set('event_id', data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Atelier API du campus\",\n  \"slug\": \"{{slug}}\",\n  \"description\": \"Un atelier suffisamment long pour passer la validation.\",\n  \"venue_id\": 1,\n  \"starts_at\": \"2026-12-10 10:00:00\",\n  \"ends_at\": \"2026-12-10 12:00:00\",\n  \"capacity\": 50,\n  \"is_public\": true,\n  \"topics\": [1, 2]\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/campus-events",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Modifier un evenement",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Modification autorisee pour le proprietaire', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().data.title).to.eql('Atelier API modifie');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Atelier API modifie\",\n  \"slug\": \"{{slug}}\",\n  \"description\": \"Un atelier suffisamment long pour passer la validation.\",\n  \"venue_id\": 1,\n  \"starts_at\": \"2026-12-10 10:00:00\",\n  \"ends_at\": \"2026-12-10 12:00:00\",\n  \"capacity\": 60,\n  \"is_public\": true,\n  \"topics\": [1]\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/campus-events/{{event_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events", "{{event_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Supprimer un evenement",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Suppression 204', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/campus-events/{{event_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events", "{{event_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Deconnexion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Deconnexion 204', function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              "pm.collectionVariables.set('token', '');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/logout",
+          "host": ["{{base_url}}"],
+          "path": ["api", "logout"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
