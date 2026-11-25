@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "9f3c7a60-5b6d-4d2f-9a41-campus-event-api",
     "name": "Campus Event API",
-    "description": "Collection de l'API REST du projet api-campus-event. La connexion enregistre le jeton dans la variable de collection {{token}}.",
+    "description": "Collection de l'API REST du projet api-campus-event. La connexion du compte 1 enregistre le jeton dans {{token}} ; celle du compte 2 enregistre {{token2}} et sert à vérifier le 403 de la Policy.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -23,6 +23,11 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token2",
       "value": "",
       "type": "string"
     },
@@ -83,6 +88,44 @@
               "language": "json"
             }
           }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Connexion compte 2 (pour le 403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Connexion du second organisateur', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.collectionVariables.set('token2', pm.response.json().token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "auth": {
+        "type": "noauth"
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"organisateur2@campus.test\",\n  \"password\": \"password\"\n}",
+          "options": { "raw": { "language": "json" } }
         },
         "url": {
           "raw": "{{base_url}}/api/login",
@@ -324,6 +367,47 @@
           "raw": "{{base_url}}/api/campus-events/{{event_id}}",
           "host": ["{{base_url}}"],
           "path": ["api", "campus-events", "{{event_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Modification refusee 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Un autre organisateur recoit 403', function () {",
+              "    pm.response.to.have.status(403);",
+              "    pm.expect(pm.response.json().message).to.eql('This action is unauthorized.');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{token2}}", "type": "string" }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Tentative de modification\",\n  \"slug\": \"refus-403-{{slug}}\",\n  \"description\": \"Une description suffisamment longue pour passer la validation.\",\n  \"venue_id\": 1,\n  \"starts_at\": \"2026-12-10 10:00:00\",\n  \"ends_at\": \"2026-12-10 12:00:00\",\n  \"capacity\": 40\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/campus-events/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "campus-events", "1"]
         }
       },
       "response": []

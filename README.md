@@ -107,7 +107,7 @@ Remplacez `VOTRE_JETON` par la valeur renvoyée par `/api/login`. La réponse 20
 
 ## Collection Postman
 
-La collection exportée se trouve dans `docs/postman/api-campus-event.postman_collection.json`. Elle utilise les variables `{{base_url}}` et `{{token}}`. La requête « Connexion » enregistre le jeton dans la variable de collection ; l'export ne contient aucun jeton.
+La collection exportée se trouve dans `docs/postman/api-campus-event.postman_collection.json`. Elle utilise les variables `{{base_url}}` et `{{token}}`. La requête « Connexion » enregistre le jeton dans la variable de collection ; « Connexion compte 2 (pour le 403) » enregistre `{{token2}}` et la requête « Modification refusee 403 » vérifie que l'autre organisateur reçoit bien 403 sur l'événement n°1. L'export ne contient aucun jeton. Une capture de cette preuve est fournie dans `screenshots/api-campus-event-403.png`.
 
 ## Choix d'architecture
 
